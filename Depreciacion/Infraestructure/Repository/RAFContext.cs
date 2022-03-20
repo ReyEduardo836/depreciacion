@@ -39,7 +39,7 @@ namespace Infraestructure.Repository
             try
             {
                 using (BinaryWriter bwHeader = new BinaryWriter(HeaderStream),
-                                  bwData = new BinaryWriter(DataStream))
+                                    bwData = new BinaryWriter(DataStream))
                 {
                     int n, k;
                     using (BinaryReader brHeader = new BinaryReader(bwHeader.BaseStream))
@@ -117,14 +117,17 @@ namespace Infraestructure.Repository
                         bwHeader.BaseStream.Seek(0, SeekOrigin.Begin);
                         bwHeader.Write(++n);
                         bwHeader.Write(k);
+                        brHeader.Close();
                     }
+                    bwData.Close();
+                    bwHeader.Close();
                 }
             }
             catch (IOException)
             {
                 throw;
             }
-            
+
         }
 
         public T Get<T>(int id) //2
@@ -206,7 +209,9 @@ namespace Infraestructure.Repository
                         {
                             pinfo.SetValue(newValue, brData.GetValue<string>(TypeCode.String));
                         }
-                    }                    
+                    }
+                    brData.Close();
+                    brHeader.Close();
                 }
                 return newValue;
             }
@@ -229,7 +234,8 @@ namespace Infraestructure.Repository
                     {
                         brHeader.BaseStream.Seek(0, SeekOrigin.Begin);
                         n = brHeader.ReadInt32();
-                    }                                        
+                    }
+                    brHeader.Close();
                 }
 
                 if(n == 0)
@@ -245,6 +251,7 @@ namespace Infraestructure.Repository
                         long posh = 8 + i * 4;
                         brHeader.BaseStream.Seek(posh, SeekOrigin.Begin);
                         index = brHeader.ReadInt32();
+                        brHeader.Close();
                     }
                     T t = Get<T>(index);
                     listT.Add(t);
@@ -269,6 +276,7 @@ namespace Infraestructure.Repository
                     brHeader.BaseStream.Seek(0, SeekOrigin.Begin);
                     n = brHeader.ReadInt32();
                     k = brHeader.ReadInt32();
+                    brHeader.Close();
                 }
 
                 for (int i = 0; i < n; i++)
@@ -279,6 +287,7 @@ namespace Infraestructure.Repository
                         long posh = 8 + i * 4;
                         brHeader.BaseStream.Seek(posh, SeekOrigin.Begin);
                         index = brHeader.ReadInt32();
+                        brHeader.Close();
                     }
 
                     T t = Get<T>(index);
@@ -295,8 +304,83 @@ namespace Infraestructure.Repository
                 throw;
             }
         }
+        public void Update<T>(T t)
+        {
+            int Id = (int)t.GetType().GetProperty("Id").GetValue(t);
 
-        //TODO Add Update and Delete method
+            using (BinaryReader brHeader = new BinaryReader(HeaderStream),
+                                brData = new BinaryReader(DataStream))
+            {
+                int n, k;
+                brHeader.BaseStream.Seek(0, SeekOrigin.Begin);
+                if (brHeader.BaseStream.Length == 0)
+                {
+                    n = 0;
+                    k = 0;
+                    return;
+                }
+                n = brHeader.ReadInt32();
+                k = brHeader.ReadInt32();
+
+                using (BinaryWriter bwHeader = new BinaryWriter(HeaderStream),
+                                   bwData = new BinaryWriter(DataStream))
+                {
+                    PropertyInfo[] propertyInfo = t.GetType().GetProperties();
+                    foreach (PropertyInfo pinfo in propertyInfo)
+                    {
+                        Type type = pinfo.PropertyType;
+                        object obj = pinfo.GetValue(t, null);
+
+                        if (type.IsGenericType)
+                        {
+                            continue;
+                        }
+                        if (type == typeof(int))
+                        {
+                            bwData.Write((int)obj);
+                        }
+                        else if (type == typeof(long))
+                        {
+                            bwData.Write((long)obj);
+                        }
+                        else if (type == typeof(float))
+                        {
+                            bwData.Write((float)obj);
+                        }
+                        else if (type == typeof(double))
+                        {
+                            bwData.Write((double)obj);
+                        }
+                        else if (type == typeof(decimal))
+                        {
+                            bwData.Write((decimal)obj);
+                        }
+                        else if (type == typeof(char))
+                        {
+                            bwData.Write((char)obj);
+                        }
+                        else if (type == typeof(bool))
+                        {
+                            bwData.Write((bool)obj);
+                        }
+                        else if (type == typeof(string))
+                        {
+                            bwData.Write((string)obj);
+                        }
+                    }
+                    long posh = 8 + (Id - 1) * 4;
+                    brHeader.BaseStream.Seek(posh, SeekOrigin.Begin);
+                    long index = brHeader.ReadInt32();
+                    long posd = (index - 1) * size;
+                    bwData.BaseStream.Seek(posd, SeekOrigin.Begin);
+
+                    bwHeader.Close();
+                    bwData.Close();
+                }
+                brData.Close();
+                brHeader.Close();
+            }
+        }
         public bool Delete(int id)
         {
             try
@@ -330,7 +414,10 @@ namespace Infraestructure.Repository
                                 bwHeadertmp.Write(num);
                             }
                         }
+                        bwHeadertmp.Close();
                     }
+                    brData.Close();
+                    brHeader.Close();
                 }
                 File.Delete($"{fileName}.hd");
                 File.Move("tmp.hd", $"{fileName}.hd");
@@ -339,6 +426,57 @@ namespace Infraestructure.Repository
             catch (Exception)
             {
                 throw;
+            }
+        }
+        private void Writte<T>(BinaryWriter bwData, T t, int k, int i)
+        {
+            PropertyInfo[] propertyInfo = t.GetType().GetProperties();
+            foreach (PropertyInfo pinfo in propertyInfo)
+            {
+                Type type = pinfo.PropertyType;
+                object obj = pinfo.GetValue(t, null);
+
+                if (type.IsGenericType)
+                {
+                    continue;
+                }
+                if(i == 1 && pinfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    bwData.Write(++k);
+                    continue;
+                }
+                else if (i == 2 && type == typeof(int))
+                {
+                    bwData.Write((int)obj);
+                }
+                else if (type == typeof(long))
+                {
+                    bwData.Write((long)obj);
+                }
+                else if (type == typeof(float))
+                {
+                    bwData.Write((float)obj);
+                }
+                else if (type == typeof(double))
+                {
+                    bwData.Write((double)obj);
+                }
+                else if (type == typeof(decimal))
+                {
+                    bwData.Write((decimal)obj);
+                }
+                else if (type == typeof(char))
+                {
+                    bwData.Write((char)obj);
+                }
+                else if (type == typeof(bool))
+                {
+                    bwData.Write((bool)obj);
+                }
+                else if (type == typeof(string))
+                {
+                    bwData.Write((string)obj);
+                }
             }
         }
     }

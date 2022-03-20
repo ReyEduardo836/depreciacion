@@ -27,6 +27,11 @@ namespace AppCore.Services
         {
             return activoModel.GetById(id);
         }
+
+        public void Update(Activo t)
+        {
+            activoModel.Update(t);
+        }
     }
 
 }

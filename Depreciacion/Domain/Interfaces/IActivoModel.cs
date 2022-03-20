@@ -12,6 +12,7 @@ namespace Domain.Interfaces
     {
         Activo GetById(int id);
         bool Delete(int id);
+        void Update(Activo t);
 
     }
 }

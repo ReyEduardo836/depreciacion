@@ -11,5 +11,6 @@ namespace AppCore.IServices
     {
         Activo GetById(int id);
         bool Delete(int id);
+        void Update(Activo t);
     }
 }

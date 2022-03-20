@@ -62,5 +62,10 @@ namespace Infraestructure.Repository
         {
            return context.Delete(id);
         }
+
+        public void Update(Activo t)
+        {
+            context.Update(t);
+        }
     }
 }
