@@ -1,8 +1,0 @@
-- Porque ¨ public class BinaryActivoRepository : IActivoModel ¨
-  BinaryActivoRepository hereda de IActivoModel, si el IActivoModel esta en el 
-  Domain, si el domain esta de primero y el BinaryActivoRepository esta de ultimo
-
-- " bwData.BaseStream.Seek(pos, SeekOrigin.Begin) "
-  Para que es el SeekOrigin, si con position ya esta situado al comienzo 
-
-- 
