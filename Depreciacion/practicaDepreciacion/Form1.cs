@@ -161,13 +161,12 @@ namespace practicaDepreciacion
         {
             if (verificar())
             {
-                Activo activo = new Activo()
-                {
-                    Nombre = txtNombre.Text,
-                    Valor = double.Parse(txtValor.Text),
-                    ValorResidual = double.Parse(txtValorR.Text),
-                    VidaUtil = int.Parse(txtVidaU.Text)
-                };
+                object n = dataGridView1.CurrentRow.Cells[0].Value;
+                Activo activo = activoServices.Read()[((int)n) - 1];
+                activo.Nombre = txtNombre.Text;
+                activo.Valor = Convert.ToDouble(txtValor.Text);
+                activo.ValorResidual = Convert.ToDouble(txtValorR.Text);
+                activo.VidaUtil = Convert.ToInt32(txtVidaU.Text);
                 activoServices.Update(activo);
                 btnEliminar.Visible = false;
                 btnActualizar.Visible = false;
@@ -223,6 +222,10 @@ namespace practicaDepreciacion
             richTextBox1.Visible = false;
             btnNuevo.Visible = false;
 
+        }
+        private Activo RetornarActivo(DataGridViewCellEventArgs e)
+        {
+            return activoServices.Read()[e.RowIndex];
         }
     }
 }

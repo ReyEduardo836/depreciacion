@@ -119,8 +119,6 @@ namespace Infraestructure.Repository
                         bwHeader.Write(k);
                         brHeader.Close();
                     }
-                    bwData.Close();
-                    bwHeader.Close();
                 }
             }
             catch (IOException)
@@ -210,8 +208,6 @@ namespace Infraestructure.Repository
                             pinfo.SetValue(newValue, brData.GetValue<string>(TypeCode.String));
                         }
                     }
-                    brData.Close();
-                    brHeader.Close();
                 }
                 return newValue;
             }
@@ -235,7 +231,6 @@ namespace Infraestructure.Repository
                         brHeader.BaseStream.Seek(0, SeekOrigin.Begin);
                         n = brHeader.ReadInt32();
                     }
-                    brHeader.Close();
                 }
 
                 if(n == 0)
@@ -287,7 +282,6 @@ namespace Infraestructure.Repository
                         long posh = 8 + i * 4;
                         brHeader.BaseStream.Seek(posh, SeekOrigin.Begin);
                         index = brHeader.ReadInt32();
-                        brHeader.Close();
                     }
 
                     T t = Get<T>(index);
@@ -327,6 +321,9 @@ namespace Infraestructure.Repository
                     using (BinaryWriter bwHeader = new BinaryWriter(brHeader.BaseStream),
                                        bwData = new BinaryWriter(brData.BaseStream))
                     {
+                        long pos = (Id - 1) * size;
+                        bwData.BaseStream.Seek(pos, SeekOrigin.Begin);
+
                         PropertyInfo[] propertyInfo = t.GetType().GetProperties();
                         foreach (PropertyInfo pinfo in propertyInfo)
                         {
@@ -375,12 +372,7 @@ namespace Infraestructure.Repository
                         long index = brHeader.ReadInt32();
                         long posd = (index - 1) * size;
                         bwData.BaseStream.Seek(posd, SeekOrigin.Begin);
-
-                        //bwHeader.Close();
-                        //bwData.Close();
                     }
-                    //brData.Close();
-                    //brHeader.Close();
                 }
             }
             catch (Exception)
@@ -421,10 +413,7 @@ namespace Infraestructure.Repository
                                 bwHeadertmp.Write(num);
                             }
                         }
-                        //bwHeadertmp.Close();
                     }
-                    //brData.Close();
-                    //brHeader.Close();
                 }
                 File.Delete($"{fileName}.hd");
                 File.Move("tmp.hd", $"{fileName}.hd");
@@ -433,57 +422,6 @@ namespace Infraestructure.Repository
             catch (Exception)
             {
                 throw;
-            }
-        }
-        private void Writte<T>(BinaryWriter bwData, T t, int k, int i)
-        {
-            PropertyInfo[] propertyInfo = t.GetType().GetProperties();
-            foreach (PropertyInfo pinfo in propertyInfo)
-            {
-                Type type = pinfo.PropertyType;
-                object obj = pinfo.GetValue(t, null);
-
-                if (type.IsGenericType)
-                {
-                    continue;
-                }
-                if(i == 1 && pinfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    bwData.Write(++k);
-                    continue;
-                }
-                else if (i == 2 && type == typeof(int))
-                {
-                    bwData.Write((int)obj);
-                }
-                else if (type == typeof(long))
-                {
-                    bwData.Write((long)obj);
-                }
-                else if (type == typeof(float))
-                {
-                    bwData.Write((float)obj);
-                }
-                else if (type == typeof(double))
-                {
-                    bwData.Write((double)obj);
-                }
-                else if (type == typeof(decimal))
-                {
-                    bwData.Write((decimal)obj);
-                }
-                else if (type == typeof(char))
-                {
-                    bwData.Write((char)obj);
-                }
-                else if (type == typeof(bool))
-                {
-                    bwData.Write((bool)obj);
-                }
-                else if (type == typeof(string))
-                {
-                    bwData.Write((string)obj);
-                }
             }
         }
     }
