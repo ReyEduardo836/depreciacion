@@ -162,7 +162,7 @@ namespace practicaDepreciacion
             if (verificar())
             {
                 object n = dataGridView1.CurrentRow.Cells[0].Value;
-                Activo activo = activoServices.Read()[((int)n) - 1];
+                Activo activo = activoServices.GetById((int)n);
                 activo.Nombre = txtNombre.Text;
                 activo.Valor = Convert.ToDouble(txtValor.Text);
                 activo.ValorResidual = Convert.ToDouble(txtValorR.Text);
